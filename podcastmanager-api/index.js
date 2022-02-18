@@ -1,67 +1,64 @@
 const { response } = require('express')
 const express = require('express')
 const app = express()
-const { Client } = require('pg')
+app.use(express.json())
+const db = require('./db')
+const util = require('./utility')
 const PORT = 3000;
+let dataContext = null;
 
-const client = new Client({
-    host: 'postgres', 
+db.createDataContext({
     user: 'postgres',
     password: 'postgres',
     database: 'postgres',
     host: 'db',
     port: 5432    
-})
-
-client.connect()
-
-async function createEpisodes(client){
-    const command = 'CREATE TABLE IF NOT EXISTS episodes (episode_id INT GENERATED ALWAYS AS IDENTITY, show_id INT, info_url TEXT, media_url TEXT, created_on TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(episode_id), CONSTRAINT fk_show FOREIGN KEY(show_id) REFERENCES shows(show_id));';
-    return await client.query(command);
-}
-
-async function createShows(client){
-    const command = 'CREATE TABLE  IF NOT EXISTS shows (show_id INT GENERATED ALWAYS AS IDENTITY, title VARCHAR(1000), url TEXT, description TEXT, imageUrl TEXT, created_on TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(show_id));';
-    return await client.query(command);
-}
-
-async function setup(client) {
-    await createShows(client);
-    await createEpisodes(client);
-}
+}).then(ctx => dataContext = ctx);
 
 async function getShows(request, response) {
-    const res = await client.query('SELECT show_id, title, url, description, imageUrl, created_on FROM shows');
-    return response.json(res.rows || []);
+    console.log('getshows')
+    const shows = await dataContext.getShows();
+    return response.json(shows);
 }
 
 async function getShow(request, response) {
-    const res = await client.query('SELECT show_id, title, url, description, imageUrl, created_on FROM shows WHERE show_id = $1::int', [request.params.show_id]);
-    if (res.rows && res.rows.length)
-        return response.json(res.rows[0]);
+    const show = await dataContext.getShow(request.params.show_id);
+    if (show)
+        return response.json(show);
     return response.sendStatus(404);
 }
 
 async function getEpisodes(request, response) {
-    const res = await client.query('SELECT episode_id, show_id, info_url, media_url, created_on FROM episodes');
-    return response.json(res.rows || []);
+    const episodes = await dataContext.getEpisodes();
+    return response.json(episodes);
 }
 
 async function getShowsEpisodes(request, response) {
-    const res = await client.query('SELECT episode_id, show_id, info_url, media_url, created_on FROM episodes WHERE show_id = $1::int', [request.params.show_id]);
-    return response.json(res.rows || []);
+    const episodes = await dataContext.getShowsEpisodes(request.params.show_id);
+    return response.json(episodes);
 }
 
 async function getEpisode(request, response) {
-    const res = await client.query('SELECT episode_id, show_id, info_url, media_url, created_on FROM episodes WHERE episode_id = $1::int', [request.params.episode_id]);
-    if (res.rows && res.rows.length)
-        return response.json(res.rows);
+    const episode = await dataContext.getEpisode(request.params.episode_id);
+    if (episode)
+        return response.json(episode);
     return response.sendStatus(404);
 }
 
-setup(client)
+async function addShow(request, response) {
+    const feed = await util.getPodcast(request.body.url)
+    
+    await dataContext.addShow(
+        feed['rss']['channel']['title'],
+        feed['rss']['channel']['link'],
+        feed['rss']['channel']['description'],
+        feed['rss']['channel']['itunes:image']);
+    response.send(dataContext.getShows());
+}
 
-app.get('/shows', getShows)
+app.get('/shows',getShows)
+app.post('/shows',addShow)
+
 app.get('/shows/:show_id', getShow)
 app.get('/shows/:show_id/episodes', getShowsEpisodes)
 app.get('/shows/:show_id/episodes/:episode_id', getEpisode)

@@ -2,18 +2,17 @@ const { response } = require('express')
 const express = require('express')
 const app = express()
 app.use(express.json())
-const db = require('./db')
+const { DataContext } = require('./db')
 const util = require('./utility')
 const PORT = 3000;
-let dataContext = null;
 
-db.createDataContext({
+const dataContext = new DataContext({
     user: 'postgres',
     password: 'postgres',
     database: 'postgres',
     host: 'db',
     port: 5432    
-}).then(ctx => dataContext = ctx);
+});
 
 async function getShows(request, response) {
     console.log('getshows')
@@ -47,13 +46,21 @@ async function getEpisode(request, response) {
 
 async function addShow(request, response) {
     const feed = await util.getPodcast(request.body.url)
-    
-    await dataContext.addShow(
+    const show = await dataContext.addShow(
         feed['rss']['channel']['title'],
         feed['rss']['channel']['link'],
         feed['rss']['channel']['description'],
-        feed['rss']['channel']['itunes:image']);
-    response.send(dataContext.getShows());
+        feed['rss']['channel']['itunes:image']['@_href']);
+    for(const item of feed['rss']['channel']['item']) {
+        await dataContext.addEpisode(
+            show.show_id, 
+            item['title'],
+            item['link'],
+            item['enclosure']['@_url'],
+            item['description']
+        )
+    }
+    response.send(show);
 }
 
 app.get('/shows',getShows)

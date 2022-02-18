@@ -2,7 +2,7 @@ const https = require('https');
 const { XMLParser } = require('fast-xml-parser')
 
 function parsePodcast(content){
-    const parser = new XMLParser();
+    const parser = new XMLParser({ ignoreAttributes: false });
     return parser.parse(content);
 }
 

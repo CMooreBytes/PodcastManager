@@ -1,7 +1,12 @@
 const { response } = require('express')
 const express = require('express')
+const cors = require('cors')
 const app = express()
+
+app.use(cors())
 app.use(express.json())
+
+
 const { DataContext } = require('./db')
 const util = require('./utility')
 const PORT = 3000;
@@ -15,7 +20,6 @@ const dataContext = new DataContext({
 });
 
 async function getShows(request, response) {
-    console.log('getshows')
     const shows = await dataContext.getShows();
     return response.json(shows);
 }

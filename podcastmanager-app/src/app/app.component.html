@@ -1,3 +1,25 @@
-<div *ngFor="let episode of this.episodes">
-  <div>{{ episode.title }}</div>
+<div *ngFor="let show of this.shows">
+  <div><a href="/shows/{{ show.show_id }}">{{ show.title }}</a></div>
+  <div>{{ show.url }}</div>
+  <div>{{ show.description }}</div>
+  <div>{{ show.imageUrl }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Title</th>
+        <th>Url</th>
+        <th>Created On</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let episode of show.show_episodes">
+        <td><a [attr.href]="episode.media_url">Play</a></td>
+        <td>{{ episode.title }}</td>
+        <td>{{ episode.info_url }} </td>
+        <td>{{ episode.created_on }} </td>
+      </tr>
+    </tbody>
+  </table>
 </div>

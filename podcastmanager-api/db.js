@@ -20,7 +20,7 @@ exports.DataContext = class DataContext {
         client.end()
         return res.rows || [];
     }
-
+    
     async getShows() {
         const client = new Client({ user: this.#user, password: this.#password, database: this.#database, host:this.#host, port:this.#port });
         await client.connect();
@@ -42,7 +42,7 @@ exports.DataContext = class DataContext {
     async getEpisodes() {
         const client = new Client({ user: this.#user, password: this.#password, database: this.#database, host:this.#host, port:this.#port });
         await client.connect();
-        const res = await client.query('SELECT episode_id, show_id, title, info_url, media_url, description, created_on FROM episodes');
+        const res = await client.query('SELECT shows.*, json_agg(e.*) as show_episodes FROM shows JOIN (SELECT * FROM episodes LIMIT 3) e on e.show_id = shows.show_id GROUP BY shows.show_id');
         client.end()
         return res.rows || [];
     }
@@ -50,7 +50,7 @@ exports.DataContext = class DataContext {
     async getShowsEpisodes(show_id) {
         const client = new Client({ user: this.#user, password: this.#password, database: this.#database, host:this.#host, port:this.#port });
         await client.connect();
-        const res = await client.query('SELECT episode_id, show_id, title, info_url, media_url, description, created_on FROM episodes WHERE show_id = $1::int', [show_id]);
+        const res = await client.query('SELECT shows.*, json_agg(episodes.*) as show_episodes FROM shows JOIN episodes on episodes.show_id = shows.show_id WHERE shows.show_id = $1::int GROUP BY shows.show_id; ', [show_id]);
         client.end()
         return res.rows || [];
     }

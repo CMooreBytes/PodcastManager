@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DataService, Episode } from './services/data.service';
+import { DataService, Show, Episode } from './services/data.service';
 
 @Component({
   selector: 'app-root',
@@ -8,7 +8,7 @@ import { DataService, Episode } from './services/data.service';
 })
 export class AppComponent implements OnInit{
   title = 'podcastmanager-app';
-  episodes: Episode[] = [];
+  shows: Show[] = [];
 
   constructor(private dataService: DataService) {
     this.dataService = dataService;
@@ -16,7 +16,7 @@ export class AppComponent implements OnInit{
 
   getEpisodes(): void {
     this.dataService.getEpisodes()
-      .subscribe((episodes: Episode[]) => this.episodes = episodes)
+      .subscribe((shows: Show[]) => this.shows = shows)
   }
 
   ngOnInit(): void {

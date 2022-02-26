@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
+import { InterpolationConfig } from '@angular/compiler';
 
 export interface Episode {
   episode_id: number;
@@ -10,7 +11,17 @@ export interface Episode {
   info_url: string; 
   media_url: string;
   description: string;
-  created_on: any
+  created_on: any;
+}
+
+export interface Show {
+  show_id: number;
+  title: string;
+  url: string;
+  description: string;
+  imageUrl: string;
+  created_on: any;
+  show_episodes: Episode[];
 }
 
 @Injectable()
@@ -20,7 +31,7 @@ export class DataService {
     this.http = http;
   }
 
-  getEpisodes(): Observable<Episode[]> {
-    return this.http.get<Episode[]>(`http://${this.BASEURL}/`)
+  getEpisodes(): Observable<Show[]> {
+    return this.http.get<Show[]>(`http://${this.BASEURL}/`)
   }
 }

@@ -70,8 +70,7 @@ async function addShow(request, response) {
 app.get('/shows',getShows)
 app.post('/shows',addShow)
 
-app.get('/shows/:show_id', getShow)
-app.get('/shows/:show_id/episodes', getShowsEpisodes)
+app.get('/shows/:show_id', getShowsEpisodes)
 app.get('/shows/:show_id/episodes/:episode_id', getEpisode)
 app.get('/', getEpisodes)
 
